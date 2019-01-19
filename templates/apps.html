@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block subtitle %}Apps{% endblock %}
+{% block content %}
+	<div>
+		<h2>Actions</h2>
+		<div>
+			<a href="{{ url_for('app_create_page') }}">Create a new app</a>
+		</div>
+	</div>
+	<div>
+		<h2>Apps</h2>
+		<table id="app-list">
+			<thead>
+				<th>Name</th>
+				<th>Version</th>
+				<th>Category</th>
+				<th>Status</th>
+				<th>Created by</th>
+				<th>Last release</th>
+			</thead>
+			<tbody>
+				{% for app in apps %}
+				<tr>
+					<td><a href="{{ url_for('app_page', slug=app.slug) }}">{{ app.name }}</a></td>
+					<td>{{ app.version }}</td>
+					<td>{{ app.category }}</td>
+					<td>{{ app.status }}</td>
+					<td>{{ app.user }}</td>
+					<td><div title="{{ app.last_release|tstodatestr }}">{{ app.last_release|humanizets }}</div></td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+{% endblock %}

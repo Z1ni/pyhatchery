@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block subtitle %}App - {{ app.name }} - {{ file.name }}{% endblock %}
+{% block head %}<style type="text/css">{{ file.highlight_styles|safe }}</style>{% endblock %}
+{% block content %}
+	<h2>File info</h2>
+	<div id="file-info-container">
+		<table>
+			<tbody>
+				<tr>
+					<th scope="row">Name</th>
+					<td id="file-name">{{ file.name }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Size</th>
+					<td id="file-size">{{ file.size|filesizeformat }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Created at</th>
+					<td id="app-created-at"><div title="{{ file.created_at|tstodatestr }}">{{ file.created_at|humanizets }}</div></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<h2>Content</h2>
+	<div id="file-content-container">
+		{# <textarea id="file-content">{{ file.content }}</textarea> #}
+		{{ file.highlight_content|safe }}
+	</div>
+{% endblock %}

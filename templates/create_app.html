@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block subtitle %}Create a new app{% endblock %}
+{% block content %}
+	<h2 id="app-create-info-title">Basic info</h2>
+	<form id="app-create-info-container" action="" method="POST">
+		<div class="info-field-container">
+			<div class="info-field-title">Name:</div>
+			<input class="info-field-input" type="text" name="name">
+		</div>
+		<div class="info-field-container">
+			<div class="info-field-title">Category:</div>
+			<select class="info-field-input" name="category">
+				{% for category in categories %}
+				<option value="{{ category.id }}">{{ category.name }}</option>
+				{% endfor %}
+			</select>
+		</div>
+		<div class="info-field-container">
+			<div class="info-field-title">Status:</div>
+			<select class="info-field-input" name="status">
+				{% for status in statuses %}
+				<option value="{{ status.id }}">{{ status.name }}</option>
+				{% endfor %}
+			</select>
+		</div>
+		<div class="info-field-container">
+			<div class="info-field-title">Description:</div>
+			<textarea id="app-create-description" class="info-field-input" name="description"></textarea>
+		</div>
+
+		<div id="app-controls">
+			<input type="submit" value="Create">
+		</div>
+	</form>
+{% endblock %}

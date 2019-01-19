@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block subtitle %}Create a new release - {{ app.name }}{% endblock %}
+{% block content %}
+	<h2>Release info</h2>
+	<form id="app-create-release-info-container" action="" method="POST" enctype="multipart/form-data">
+		<div class="info-field-container">
+			<div class="info-field-title">Released:</div>
+			<input class="info-field-input" type="checkbox" name="released">
+		</div>
+		<div class="info-field-container">
+			<div class="info-field-title">Files (must contain at least "__init__.py"):</div>
+			<div class="info-field-input">
+				<input type="file" name="files" multiple>
+			</div>
+		</div>
+
+		<div id="app-controls">
+			<input type="submit" value="Create">
+		</div>
+	</form>
+{% endblock %}

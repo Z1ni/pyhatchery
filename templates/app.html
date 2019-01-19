@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block subtitle %}App - {{ app.name }}{% endblock %}
+{% block content %}
+	<h2>Basic info</h2>
+	<div id="app-info-container">
+		<table>
+			<tbody>
+				<tr>
+					<th scope="row">Name</th>
+					<td id="app-name">{{ app.name }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Version</th>
+					<td id="app-version">
+						{% if app.version %}
+						{{ app.version }}
+						{% else %}
+						No releases
+						{% endif %}
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">Created by</th>
+					<td id="app-creator">{{ app.user }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Category</th>
+					<td id="app-category">{{ app.category }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Status</th>
+					<td id="app-status">{{ app.status }}</td>
+				</tr>
+				<tr>
+					<th scope="row">Description</th>
+					<td id="app-description">{{ app.desc }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<h2>Releases</h2>
+	<div id="app-release-container">
+		<table id="app-release-list">
+			<thead>
+				<tr>
+					<th>Version</th>
+					<th>Size</th>
+					<th>Size (unpacked)</th>
+					<th>Created at</th>
+					<th>Egg</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for egg in eggs %}
+				<tr>
+					<td>{{ egg.version }}</td>
+					<td>{{ egg.size|filesizeformat }}</td>
+					<td>{{ egg.size_unpacked|filesizeformat }}</td>
+					<td><div title="{{ egg.created_at|tstodatestr }}">{{ egg.created_at|humanizets }}</div></td>
+					<td><a href="{{ url_for('get_egg', egg_hash=egg.hash) }}">Download</a></td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+
+	<h2>Current release files</h2>
+	<div id="app-files-container">
+		<table id="app-file-list">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Size</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for file in files %}
+				<tr>
+					<td>{{ file.name }}</td>
+					<td>{{ file.size|filesizeformat }}</td>
+					<td><a href="{{ url_for('show_release_file', slug=app.slug, fhash=file.hash) }}">Open</a></td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+
+	<h2>Actions</h2>
+	<div id="app-controls">
+		<a href="{{ url_for('app_create_release_page', slug=app.slug) }}">Create release</a>
+	</div>
+{% endblock %}

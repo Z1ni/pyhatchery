@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>pyhatchery</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+	{% block head %}{% endblock %}
+</head>
+<body>
+	<div id="title-container">
+		<div id="title"><a href="{{ url_for('apps') }}">Pyhatchery</a></div>
+		<div id="subtitle">{% block subtitle %}{% endblock %}</div>
+	</div>
+
+	{% block content %}
+	{% endblock %}
+</body>
+</html>
