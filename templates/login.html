@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block subtitle %}Login{% endblock %}
+{% block content %}
+	<div>
+		<form id="login-form" method="POST" action="">
+			<table>
+				<tbody>
+					<tr>
+						<td>Email</td>
+						<td><input type="text" id="email" name="email"></td>
+					</tr>
+					<tr>
+						<td>Password</td>
+						<td><input type="password" id="password" name="password"></td>
+					</tr>
+					<tr>
+						<td colspan="2"><input type="submit" value="Login"></td>
+					</tr>
+				</tbody>
+			</table>
+		</form>
+	</div>
+{% endblock %}

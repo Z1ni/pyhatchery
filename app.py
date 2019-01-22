@@ -7,7 +7,8 @@ import hashlib
 import humanize
 import sqlite3
 import json
-from flask import Flask, jsonify, abort, send_from_directory, g, render_template, request, url_for, redirect
+import bcrypt
+from flask import Flask, jsonify, abort, send_from_directory, g, render_template, request, url_for, redirect, session, flash
 from slugify import slugify
 from werkzeug.utils import secure_filename
 from pygments import highlight
@@ -28,6 +29,7 @@ LISTEN_ADDR = "0.0.0.0"
 LISTEN_PORT = 443
 
 app = Flask(__name__)
+app.secret_key = b""
 
 
 def get_db():
@@ -186,6 +188,22 @@ def get_newest_egg_files(app):
     return files
 
 
+def get_user_unsafe(email):
+    cur = get_db().cursor()
+    cur.execute("SELECT id, name, password, email, created_at, updated_at FROM user WHERE email = ?", (email,))
+    res = cur.fetchone()
+    if res is None:
+        return None
+    return {
+        "id": res[0],
+        "name": res[1],
+        "password": res[2],
+        "email": res[3],
+        "created_at": res[4],
+        "updated_at": res[5]
+    }
+
+
 @app.template_filter("humanizets")
 def humanize_timestamp(ts):
     # Convert timestamp to datetime
@@ -203,7 +221,7 @@ def ts_to_datestr(ts):
 
 @app.route("/")
 def main():
-    return "Nothing here yet"
+    return redirect(url_for("apps"))
 
 
 @app.route("/apps")
@@ -511,6 +529,39 @@ def show_release_file(slug, fhash):
 
     return render_template("app_file.html", app=cur_app, file=fileinfo)
 
+
+# ============================== User management ==============================
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        # Check login
+        email = request.form["email"]
+        passwd = (request.form["password"] or "").encode("utf-8")
+        # Check user and password
+        user = get_user_unsafe(email)
+        if user is None or not bcrypt.checkpw(passwd, user["password"].encode("utf-8")):
+            # No such user or invalid password
+            flash("Invalid username or password")
+            return render_template("login.html")
+        # Login OK, remove password field from user
+        user.pop("password")
+        # Set session user
+        session["user"] = user
+        # Redirect to index
+        # TODO: Redirect to user page instead
+        return redirect(url_for("main"))
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    return redirect(url_for("main"))
+
+
+# ==================================== API ====================================
 
 @app.route("/eggs/categories/json")
 def categories():

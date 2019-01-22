@@ -12,6 +12,21 @@
 		<div id="subtitle">{% block subtitle %}{% endblock %}</div>
 	</div>
 
+	<div id="user-container">
+		{% if session.user %}
+		<div>Hello, {{ session.user.name }}.</div>
+		<div><a href="{{ url_for('logout') }}">Logout</a></div>
+		{% else %}
+		<div><a href="{{ url_for('login') }}">Login</a></div>
+		{% endif %}
+	</div>
+
+	<div id="notification-container">
+		{% for msg in get_flashed_messages() %}
+		<div class="notification">{{ msg }}</div>
+		{% endfor %}
+	</div>
+
 	{% block content %}
 	{% endblock %}
 </body>
