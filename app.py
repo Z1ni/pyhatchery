@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
 from datetime import datetime
+import binascii
 import os
+import sys
 import tarfile
 import hashlib
 import humanize
 import sqlite3
 import json
 import bcrypt
+import yaml
 from flask import Flask, jsonify, abort, send_from_directory, g, render_template, request, url_for, redirect, session, flash
 from slugify import slugify
 from werkzeug.utils import secure_filename
@@ -15,27 +18,35 @@ from pygments import highlight
 from pygments.lexers import guess_lexer_for_filename
 from pygments.formatters import HtmlFormatter
 
-# TODO: Move these to a config file
-APP_BASE_PATH = ""
-STATIC_PATH = os.path.join(APP_BASE_PATH, "static")
-SSL_CERT_PATH = os.path.join(APP_BASE_PATH, "server.pem")
-DATABASE = os.path.join(APP_BASE_PATH, "data.db")
-BASE_URL = "https://example.com"
-ALLOWED_RELEASE_FILE_EXTS = ["py", "png", "txt", "json", "yml", "yaml", "html", "htm", "js"]
-RELEASE_FILE_PATH = os.path.join(STATIC_PATH, "releases")
-EGG_PATH = os.path.join(STATIC_PATH, "eggs")
+CONFIG = None
 
-LISTEN_ADDR = "0.0.0.0"
-LISTEN_PORT = 443
+# Read config
+try:
+    with open("config.yml", "r") as f:
+        CONFIG = yaml.load(f)
+except FileNotFoundError:
+    # TODO: Handle better
+    print("Config file \"config.yml\" was not found!", file=sys.stderr)
+    sys.exit(1)
+
 
 app = Flask(__name__)
-app.secret_key = b""
+app.secret_key = binascii.unhexlify(CONFIG["secret_key"])
+
+
+def conf_get_path(key, root="paths"):
+    base = CONFIG["paths"]["base_dir"]
+    try:
+        child_path = CONFIG[root][key]
+    except KeyError:
+        return None
+    return os.path.join(base, child_path)
 
 
 def get_db():
     db = getattr(g, "_database", None)
     if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
+        db = g._database = sqlite3.connect(conf_get_path("path", "database"))
     return db
 
 
@@ -386,7 +397,7 @@ def app_create_release(slug):
         new_version_num = resp[0] + 1
 
     # Create folder for this upload
-    release_folder_path = os.path.join(RELEASE_FILE_PATH, "%s-%d" % (slug, new_version_num))
+    release_folder_path = os.path.join(conf_get_path("releases_dir"), "%s-%d" % (slug, new_version_num))
     os.mkdir(release_folder_path)
 
     stored_files = []
@@ -394,7 +405,7 @@ def app_create_release(slug):
 
     for file in uploaded_files:
         fname = file.filename
-        if "." in fname and fname.rsplit(".", 1)[1].lower() in ALLOWED_RELEASE_FILE_EXTS:
+        if "." in fname and fname.rsplit(".", 1)[1].lower() in CONFIG["uploads"]["allowed_file_extensions"]:
             # Allowed, save to the release folder
             secure_name = secure_filename(fname)
             local_path = os.path.join(release_folder_path, secure_name)
@@ -427,7 +438,7 @@ def app_create_release(slug):
     stored_files.append(("metadata.json", "metadata.json", os.path.getsize(metadata_path)))
 
     # Create tarball
-    tarball_path = os.path.join(EGG_PATH, "%s.tar.gz" % (egg_hash,))
+    tarball_path = os.path.join(conf_get_path("eggs_dir"), "%s.tar.gz" % (egg_hash,))
     with tarfile.open(tarball_path, "w:gz") as tgz:
         # Add uploaded files
         for fname, secure_name, _ in stored_files:
@@ -509,7 +520,7 @@ def show_release_file(slug, fhash):
 
     # Get file content
     rel_folder = "%s-%d" % (slug, info[5])
-    with open(os.path.join(RELEASE_FILE_PATH, rel_folder, info[1]), "rb") as f:
+    with open(os.path.join(conf_get_path("releases_dir"), rel_folder, info[1]), "rb") as f:
         content = f.read()
 
     # Highlight content (if needed)
@@ -662,7 +673,7 @@ def get(name):
     newest_version = str(data[0][0])
     for release in data:
         releases[str(release[0])] = [{
-            "url": "%s/eggs/%s.tar.gz" % (BASE_URL, release[5],)
+            "url": "%s/eggs/%s.tar.gz" % (CONFIG["urls"]["base"], release[5],)
         }]
 
     return jsonify({
@@ -679,10 +690,18 @@ def get(name):
 @app.route("/eggs/<egg_hash>.tar.gz")
 def get_egg(egg_hash):
     # TODO: Check that egg_hash really seems to be MD5 hash
-    return send_from_directory(EGG_PATH, "%s.tar.gz" % (egg_hash,))
+    return send_from_directory(conf_get_path("eggs_dir"), "%s.tar.gz" % (egg_hash,))
 
-
-# @app.get("/eggs/")
 
 if __name__ == "__main__":
-    app.run(host=LISTEN_ADDR, port=LISTEN_PORT, ssl_context=(SSL_CERT_PATH,), use_reloader=True, debug=True)
+    dev_serv = CONFIG["dev_server"]
+    ssl_cert_path = dev_serv.get("ssl_cert_path") or None
+    run_conf = {
+        "host": dev_serv["address"],
+        "port": dev_serv["port"],
+        "use_reloader": True,
+        "debug": True
+    }
+    if ssl_cert_path:
+        run_conf["ssl_context"] = (ssl_cert_path,)
+    app.run(**run_conf)

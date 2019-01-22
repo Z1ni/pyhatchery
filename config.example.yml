@@ -1,0 +1,36 @@
+paths:
+  base_dir: ""
+  static_dir: "static"
+  # Releases and eggs directories are always under the static dir
+  releases_dir: "releases"
+  eggs_dir: "eggs"
+
+urls:
+  base: "https://example.com"
+
+uploads:
+  allowed_file_extensions:
+    - py
+    - png
+    - txt
+    - json
+    - yml
+    - yaml
+    - html
+    - htm
+    - js
+
+database:
+  # Database path is relative to paths.base_dir
+  path: "data.db"
+
+# Developement server (integrated)
+dev_server:
+  address: "localhost"
+  port: 8080
+  # SSL cert path is relative to paths.base_dir
+  ssl_cert_path:
+
+# Secret key for Flask as a hex string
+# Generate this e.g. with "import os, binascii; binascii.hexlify(os.urandom(16))"
+secret_key: ""
